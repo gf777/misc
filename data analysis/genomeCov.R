@@ -1,19 +1,17 @@
-setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+#setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 
 library(ggplot2)
 library(dplyr)
 library(grid)
 library(gridExtra)
 
-data <- read.csv("chrY.genomecov", header = TRUE, sep = "\t", na.strings="NA")
+data <- read.csv("noAutosomes.noX.decollapsed.genomecov", header = FALSE, col.names = c("scaffold","cov","count", "len", "freq"), sep = "\t", na.strings="NA")
 
-data2 <- read.csv("noAutosomes.noX.extract.genomecov", header = FALSE, col.names = c("scaffold","cov","count", "len", "freq"), sep = "\t", na.strings="NA")
-
-data2 %>% filter (len>52500) %>% filter (len<55000) %>% ggplot(aes(x = cov, y = count)) + 
+data %>% filter (len>52500) %>% filter (len<55000) %>% ggplot(aes(x = cov, y = count)) + 
   geom_line(aes(color = scaffold)) +
   xlim(c(0,100))
 
-p<-ggplot(data2, aes(x = cov, y = count)) + 
+p<-ggplot(data, aes(x = cov, y = count)) + 
   geom_line(size=5) +
   xlim(c(0,100)) +
   geom_vline(aes(xintercept=30), color="black", linetype="dashed", size=3) +
@@ -28,13 +26,13 @@ p<-ggplot(data2, aes(x = cov, y = count)) +
     plot.title = element_text(size = rel(5), face = "bold")
   )
 
-plots = data2 %>% 
+plots = data %>% 
     group_by(scaffold) %>% 
     do(plots = p %+% .) %>% 
     rowwise() %>%
     do(x=.$plots + ggtitle(.$scaffold))
 
-png("marmoset scaffolds.png", width = 20000, height = 20000) 
-grid.arrange(grobs = plots$x, ncol = 18)
+png("marmoset scaffolds.png", width = 50000, height = 50000) 
+grid.arrange(grobs = plots$x, ncol = 37)
 dev.off()
   
