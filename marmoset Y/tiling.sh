@@ -14,10 +14,10 @@ python tiling.py $1 $2 ${1%.*}.bed complete_set.fasta
 
 printf "\nFinal tiles:\n"
 
-cat ${1%.*}_new.agp
+cat ${1%.*}_decollapsed.agp
 
-seqkit -is replace -p "^n+|n+$" -r "" ${1%.*}_new.fasta > tmp.fasta
+seqkit -is replace -p "^n+|n+$" -r "" ${1%.*}_decollapsed.fasta > tmp.fasta
 
-cat tmp.fasta > ${1%.*}_new.fasta
+cat tmp.fasta > ${1%.*}_decollapsed.fasta
 
 rm tmp.fasta 

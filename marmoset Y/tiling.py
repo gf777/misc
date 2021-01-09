@@ -63,21 +63,23 @@ sorted_tiles = sorted(tiles, key=lambda x: x.reference_start, reverse=False)
 seq_bed = []
 ref_bed = []
 
-print("\nSegdup tiles:")		
+print("\nSegdup tiles (mapped bases):")		
 for x in range(len(sorted_tiles)): 
     print(str(sorted_tiles[x].query_name)+"\t"+str(sorted_tiles[x].reference_start)+"\t"+str(sorted_tiles[x].reference_end))
     seq_bed.append([sorted_tiles[x].query_name,sorted_tiles[x].reference_start,sorted_tiles[x].reference_end]) 
 
-print("\nReference tiles:")
+print("\nReference tiles (1-based):")
 with open(bed, newline = '') as bedfile: 
 	bedfile = csv.reader(bedfile, delimiter='\t')
-	bedfile = ((column[0], int(column[1]), int(column[2])) for column in bedfile)
+	bedfile = ([column[0], int(column[1]), int(column[2])] for column in bedfile)
 	for line in bedfile:
+		line[1]+=1
+		line[2]+=1
 		print(line[0]+"\t"+str(line[1])+"\t"+str(line[2]))
 		ref_bed.append(line)
 
 c1=1
-c2=1
+c2=0
 n=1
 gap=1000
 
@@ -89,14 +91,14 @@ f2 = open(prefix+".fasta", "w")
 f2.write(">"+prefix+"\n")
 
 for x in range(len(seq_bed)-1):
-	for y in range(len(list(ref_bed))):
+	for y in range(len(ref_bed)):
 		if ref_bed[y][2]<=seq_bed[0][1] and x==0:
-			c2=ref_bed[y][2]
-			length=ref_bed[y][2]-ref_bed[y][1]
+			c2=ref_bed[y][2]-1
+			length=c2-ref_bed[y][1]+1
 			f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(length)+"\t+\n")
-			f2.write(segdups.fetch(str(ref_bed[y][0]), start=ref_bed[y][1], end=ref_bed[y][2]))
+			f2.write(segdups.fetch(str(ref_bed[y][0]), start=ref_bed[y][1]-1, end=ref_bed[y][2]-1))
 			n=n+1
-			c1=length+1
+			c1=c2+1
 			c2=c2+gap
 			f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
 			f2.write("N"*1000)
@@ -119,12 +121,12 @@ for x in range(len(seq_bed)-1):
 	f2.write("N"*1000)
 	n=n+1
 	c1=c1+gap
-	for y in range(len(list(ref_bed))):
-		if ref_bed[y][1]>=seq_bed[x][2] and ref_bed[y][2]<=seq_bed[x+1][1]:
+	for y in range(len(ref_bed)):
+		if ref_bed[y][1]>=seq_bed[x][2] and ref_bed[y][2]-1<=seq_bed[x+1][1]:
 			length=ref_bed[y][2]-ref_bed[y][1]
 			c2=c2+length
-			f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(ref_bed[y][2])+"\t+\n")
-			f2.write(segdups.fetch(str(ref_bed[y][0]), start=ref_bed[y][1], end=ref_bed[y][2]))
+			f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(ref_bed[y][2]-1)+"\t+\n")
+			f2.write(segdups.fetch(str(ref_bed[y][0]), start=ref_bed[y][1]-1, end=ref_bed[y][2]-1))
 			n=n+1
 			c1=c2+1
 			c2=c2+gap
@@ -136,30 +138,32 @@ length=sorted_tiles[len(seq_bed)-1].query_length
 c2=c2+length
 if sorted_tiles[len(seq_bed)-1].is_reverse:
 	sign="-"
-	dna = revcomp(segdups.fetch(sorted_tiles[x].query_name))
+	dna = revcomp(segdups.fetch(sorted_tiles[len(seq_bed)-1].query_name))
 else:
 	sign="+"
-	dna = segdups.fetch(sorted_tiles[x].query_name)
+	dna = segdups.fetch(sorted_tiles[len(seq_bed)-1].query_name)
 f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(sorted_tiles[len(seq_bed)-1].query_name)+"\t1\t"+str(length)+"\t"+sign+"\n")
 f2.write(dna)
 n=n+1
 c1=c2+1
 c2=c2+gap
-f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
-f2.write("N"*1000)
+if x<len(seq_bed)-1:
+	f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
+	f2.write("N"*1000)
 n=n+1
 c1=c1+gap
-for y in range(len(list(ref_bed))):
+for y in range(len(ref_bed)):
 	if ref_bed[y][1]>=seq_bed[len(seq_bed)-1][2]:
 		length=ref_bed[y][2]-ref_bed[y][1]
 		c2=c2+length
-		f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(ref_bed[y][2])+"\t+\n")
-		f2.write(segdups.fetch(str(ref_bed[y][0]), start=ref_bed[y][1], end=ref_bed[y][2]))
+		f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(ref_bed[y][2]-1)+"\t+\n")
+		f2.write(segdups.fetch(str(ref_bed[y][0]), start=ref_bed[y][1]-1, end=ref_bed[y][2]-1))
 		c1=c2+1
 		n=n+1
 		c2=c2+gap
-		f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
-		f2.write("N"*1000)
+		if y<len(list(ref_bed))-1:
+			f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
+			f2.write("N"*1000)
 		n=n+1
 		c1=c1+gap
 		
