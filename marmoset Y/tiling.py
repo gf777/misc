@@ -60,7 +60,7 @@ for seq in seq_sorted_by_query_alignment_length:
 	if new_seq==True:
 		tiles.append(seq)
 	else:
-		f0.write(">"+seq.query_name+"\n")
+		f0.write(">"+seqid+"_"+seq.query_name+" "+str(seq.reference_start)+"-"+str(seq.reference_end)+"\n")
 		f0.write(seq.query_sequence+"\n")
 		
 f0.close()
@@ -151,28 +151,26 @@ else:
 	dna = segdups.fetch(sorted_tiles[len(seq_bed)-1].query_name)
 f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(sorted_tiles[len(seq_bed)-1].query_name)+"\t1\t"+str(length)+"\t"+sign+"\n")
 f2.write(dna)
+
 n=n+1
 c1=c2+1
-c2=c2+gap
-if x<len(seq_bed)-1:
-	f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
-	f2.write("N"*1000)
-n=n+1
-c1=c1+gap
+
 for y in range(len(ref_bed)):
 	if ref_bed[y][1]>=seq_bed[len(seq_bed)-1][2]:
+
+		c2=c2+gap		
+		f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
+		f2.write("N"*1000)
+		n=n+1
+		c1=c1+gap
+
 		length=ref_bed[y][2]-ref_bed[y][1]
 		c2=c2+length
 		f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(ref_bed[y][2]-1)+"\t+\n")
 		f2.write(segdups.fetch(str(ref_bed[y][0]), start=ref_bed[y][1]-1, end=ref_bed[y][2]-1))
 		c1=c2+1
 		n=n+1
-		c2=c2+gap
-		if y<len(list(ref_bed))-1:
-			f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
-			f2.write("N"*1000)
-		n=n+1
-		c1=c1+gap
+
 		
 f1.close()
 f2.close()

@@ -4,7 +4,7 @@ rm -f all_unaffected.fasta
 
 for scaffold in *.1; do
 
-if ! [[ -e $scaffold/$scaffold.collapse/sda.asm.bam ]]; then
+if ! [[ -s $scaffold/$scaffold.collapse/sda.asm.bam && $(samtools view -c $scaffold/$scaffold.collapse/sda.asm.bam)>0 ]]; then
 
 cat $scaffold/$scaffold.fasta >> all_unaffected.fasta
 
