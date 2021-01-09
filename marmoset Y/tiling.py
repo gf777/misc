@@ -12,13 +12,14 @@ bed = argv[3]
 seg = argv[4]
 
 def check_seq(seq, coordinates):
+	return_seq = True
 	for qstart, qend in coordinates.items():
 		if seq.reference_start>qend or seq.reference_end<qstart:
-			return_seq = seq
+			return_seq = True
 		else:
-			return_seq = None
+			return_seq = False
 			break
-	if return_seq is not None:
+	if return_seq is True:
 		coordinates.update({seq.reference_start:seq.reference_end})
 	return return_seq
 	
@@ -27,7 +28,9 @@ def revcomp(seq):
 
 samfile = pysam.AlignmentFile(bam, "rb")
 
-prefix = samfile.get_reference_name(0)+"_decollapsed"
+seqid = samfile.get_reference_name(0)
+
+name_suffix = seqid+"_decollapsed"
 
 print("Reference: "+samfile.get_reference_name(0))
 print ("N of decollapsed sequences: "+str(samfile.count()))
@@ -47,16 +50,20 @@ first_block_end = seq_sorted_by_query_alignment_length[0].reference_end
 print("\nSeed:")
 print(seq_sorted_by_query_alignment_length[0].query_name+"\t"+str(seq_sorted_by_query_alignment_length[0].query_alignment_length)+"\t"+str(first_block_start)+"\t"+str(first_block_end))
 
-coordinates = {first_block_start:first_block_end}
-
+coordinates = {}
 tiles = []
 
-tiles.append(seq_sorted_by_query_alignment_length[0])
+f0 = open(seqid+"_unplaced.fasta", "w")
 
 for seq in seq_sorted_by_query_alignment_length:  
-	seq = check_seq(seq, coordinates)
-	if seq is not None:
+	new_seq = check_seq(seq, coordinates)
+	if new_seq==True:
 		tiles.append(seq)
+	else:
+		f0.write(">"+seq.query_name+"\n")
+		f0.write(seq.query_sequence+"\n")
+		
+f0.close()
 
 sorted_tiles = sorted(tiles, key=lambda x: x.reference_start, reverse=False)
 
@@ -85,22 +92,22 @@ gap=1000
 
 segdups = pysam.FastaFile(seg)
 
-f1 = open(prefix+".agp", "w")
-f2 = open(prefix+".fasta", "w")
+f1 = open(name_suffix+".agp", "w")
+f2 = open(name_suffix+".fasta", "w")
 
-f2.write(">"+prefix+"\n")
+f2.write(">"+name_suffix+"\n")
 
 for x in range(len(seq_bed)-1):
 	for y in range(len(ref_bed)):
 		if ref_bed[y][2]<=seq_bed[0][1] and x==0:
 			c2=ref_bed[y][2]-1
 			length=c2-ref_bed[y][1]+1
-			f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(length)+"\t+\n")
+			f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(length)+"\t+\n")
 			f2.write(segdups.fetch(str(ref_bed[y][0]), start=ref_bed[y][1]-1, end=ref_bed[y][2]-1))
 			n=n+1
 			c1=c2+1
 			c2=c2+gap
-			f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
+			f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
 			f2.write("N"*1000)
 			n=n+1
 			c1=c1+gap
@@ -112,12 +119,12 @@ for x in range(len(seq_bed)-1):
 	else:
 		sign="+"
 		dna = segdups.fetch(sorted_tiles[x].query_name)
-	f1.write(str(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+sorted_tiles[x].query_name)+"\t1\t"+str(length)+"\t"+sign+"\n")
+	f1.write(str(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+sorted_tiles[x].query_name)+"\t1\t"+str(length)+"\t"+sign+"\n")
 	f2.write(dna)
 	n=n+1
 	c1=c2+1
 	c2=c2+gap
-	f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
+	f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
 	f2.write("N"*1000)
 	n=n+1
 	c1=c1+gap
@@ -125,12 +132,12 @@ for x in range(len(seq_bed)-1):
 		if ref_bed[y][1]>=seq_bed[x][2] and ref_bed[y][2]-1<=seq_bed[x+1][1]:
 			length=ref_bed[y][2]-ref_bed[y][1]
 			c2=c2+length
-			f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(ref_bed[y][2]-1)+"\t+\n")
+			f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(ref_bed[y][2]-1)+"\t+\n")
 			f2.write(segdups.fetch(str(ref_bed[y][0]), start=ref_bed[y][1]-1, end=ref_bed[y][2]-1))
 			n=n+1
 			c1=c2+1
 			c2=c2+gap
-			f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
+			f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
 			f2.write("N"*1000)
 			n=n+1
 			c1=c1+gap
@@ -142,13 +149,13 @@ if sorted_tiles[len(seq_bed)-1].is_reverse:
 else:
 	sign="+"
 	dna = segdups.fetch(sorted_tiles[len(seq_bed)-1].query_name)
-f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(sorted_tiles[len(seq_bed)-1].query_name)+"\t1\t"+str(length)+"\t"+sign+"\n")
+f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(sorted_tiles[len(seq_bed)-1].query_name)+"\t1\t"+str(length)+"\t"+sign+"\n")
 f2.write(dna)
 n=n+1
 c1=c2+1
 c2=c2+gap
 if x<len(seq_bed)-1:
-	f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
+	f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
 	f2.write("N"*1000)
 n=n+1
 c1=c1+gap
@@ -156,13 +163,13 @@ for y in range(len(ref_bed)):
 	if ref_bed[y][1]>=seq_bed[len(seq_bed)-1][2]:
 		length=ref_bed[y][2]-ref_bed[y][1]
 		c2=c2+length
-		f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(ref_bed[y][2]-1)+"\t+\n")
+		f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tW\t"+str(ref_bed[y][0])+"\t"+str(ref_bed[y][1])+"\t"+str(ref_bed[y][2]-1)+"\t+\n")
 		f2.write(segdups.fetch(str(ref_bed[y][0]), start=ref_bed[y][1]-1, end=ref_bed[y][2]-1))
 		c1=c2+1
 		n=n+1
 		c2=c2+gap
 		if y<len(list(ref_bed))-1:
-			f1.write(prefix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
+			f1.write(name_suffix+"\t"+str(c1)+"\t"+str(c2)+"\t"+str(n)+"\tN\t"+str(gap)+"\t"+"scaffold\tyes\tna\n")
 			f2.write("N"*1000)
 		n=n+1
 		c1=c1+gap
