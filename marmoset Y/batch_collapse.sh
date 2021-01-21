@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#++++     Credit: Giulio Formenti giulio.formenti@gmail.com     ++++
+
 while read -r line;
 do
 

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#++++     Credit: Giulio Formenti giulio.formenti@gmail.com     ++++
+
 scaffold=$1
 
 if [[ -s $scaffold/$scaffold.collapse/sda.asm.bam && $(samtools view -c $scaffold/$scaffold.collapse/sda.asm.bam) > 0 ]]; then

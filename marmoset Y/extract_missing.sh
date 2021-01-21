@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#++++     Credit: Giulio Formenti giulio.formenti@gmail.com     ++++
+
 scaffold=$1
 
 if [[ -e $scaffold/$scaffold.collapse/sda.asm.bam ]]; then

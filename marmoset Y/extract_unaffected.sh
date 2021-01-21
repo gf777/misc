@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#++++     Credit: Giulio Formenti giulio.formenti@gmail.com     ++++
+
 rm -f all_unaffected.fasta
 
 for scaffold in *.1; do

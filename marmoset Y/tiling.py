@@ -1,3 +1,5 @@
+#++++     Credit: Giulio Formenti giulio.formenti@gmail.com     ++++
+
 import pysam
 from sys import argv
 import csv
