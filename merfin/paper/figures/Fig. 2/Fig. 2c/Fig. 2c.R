@@ -77,9 +77,9 @@ illumina_df<-AppendMe(c("GCA_009914755.1_T2T_v0.7_genomic.illumina","t2t_chm13.v
 
 devSVG(file = "hist_hifi.svg", width = 30, height = 30, bg = "white", fg = "black",
        onefile = TRUE, xmlHeader = TRUE)
-plot_multi_histogram(hifi_df, 'k', 'source', 1, c(-150,150), labels = c('Hicanu assembly', 'T2T v1.0'))
+plot_multi_histogram(hifi_df, 'k', 'source', 1, c(-150,150), labels = c('v0.7', 'v1.0'))
 dev.off()
 
 png("hist_illumina.png", width = 2000, height = 2000)
-plot_multi_histogram(illumina_df, 'k', 'source', 1, c(-150,150), labels = c('Hicanu assembly', 'T2T v1.0'))
+plot_multi_histogram(illumina_df, 'k', 'source', 1, c(-150,150), labels = c('v0.7', 'v1.0'))
 dev.off()
