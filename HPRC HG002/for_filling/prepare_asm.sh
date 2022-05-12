@@ -16,7 +16,7 @@ awk -v min_gap="${2}" '{if ($3-$2>min_gap) print $0}' gaps.bed > gaps.gt${2}.bed
 #find non-gapped sequence coordinates
 bedtools complement -i gaps.gt${2}.bed -g ${1}.sizes > sequences.gaps.gt${2}.bed
 
-#find non-gapped sequence coordinates
+#extract non-gapped sequences
 bedtools getfasta -fi $1 -bed sequences.gaps.gt${2}.bed > ${asm_prefix}.contigs.gaps.gt${2}.fasta
 
 #extract scaffolds
