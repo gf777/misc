@@ -105,10 +105,19 @@ if ! [[ -e "aligned_reads.bam.pbi" ]]; then
 
 	pbindex aligned_reads.bam
 
-	echo "aligned_reads.bam file indexed."	
+	echo "aligned_reads.bam file indexed (pbi)."	
 
 fi
 
+if ! [[ -e "aligned_reads.bam.bai" ]]; then
+
+	echo "Indexing aligned_reads.bam file."
+
+	samtools index aligned_reads.bam -@ ${N_PROC} 
+
+	echo "aligned_reads.bam file indexed (bai)."	
+
+fi
 
 if ! [[ -e "${ASM}.fai" ]]; then
 
