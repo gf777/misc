@@ -9,4 +9,4 @@ pattern = '|'.join(sorted(re.escape(k) for k in d))
 with open(sys.argv[1], 'r') as file:
     new = re.sub(pattern, lambda m: d.get(m.group(0)), file.read())
 
-print(new)
+sys.stdout.write(new)
