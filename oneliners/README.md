@@ -5,4 +5,5 @@ gfastats input.fasta.gz -s c | sort -nrk2 | awk 'BEGIN{pos=0}{total+=$2; size[po
 Extract all rows to columns for /usr/bin/time -vv output
 ```
 for lg in log/*; do file=$(basename ${lg%.*}); echo $file $lg $(grep -oP '(?<=: ).*' $lg); done
+for lg in log/*; do file=$(basename ${lg%.*}); echo $(grep -oP '(.*): ' $lg); done | sed 's/:/:,/g' #header
 ```
