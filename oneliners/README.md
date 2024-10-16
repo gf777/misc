@@ -7,3 +7,8 @@ Extract all rows to columns for /usr/bin/time -vv output
 for lg in log/*; do file=$(basename ${lg%.*}); echo $file $lg $(grep -oP '(?<=: ).*' $lg); done
 for lg in log/*; do file=$(basename ${lg%.*}); echo $(grep -oP '(.*): ' $lg); done | sed 's/:/:,/g' #header
 ```
+
+Remove special characters from fasta
+```
+sed -iE  '/^[^>]/ s/[^ATGCNatgcn]/N/g' input.fa
+```
